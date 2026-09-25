@@ -44,6 +44,14 @@ export async function init() {
       .set({ oauthResponse: response })
       .then(() => {
         console.warn('[Hypothesis OAuth] background stored code');
+        chromeAPI.runtime
+          .sendMessage({
+            type: 'hypothesis-firefox-oauth-delivery',
+            ...response,
+          })
+          .catch(error =>
+            console.error('[Hypothesis OAuth] sidebar message failed', error),
+          );
         sendResponse({ stored: true });
       })
       .catch(error => {

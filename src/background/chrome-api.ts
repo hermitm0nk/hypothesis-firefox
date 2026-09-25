@@ -60,6 +60,7 @@ export function getChromeAPI(chrome = globalThis.chrome) {
         : null,
 
       setUninstallURL: chrome.runtime.setUninstallURL,
+      sendMessage: chrome.runtime.sendMessage,
     },
 
     permissions: {

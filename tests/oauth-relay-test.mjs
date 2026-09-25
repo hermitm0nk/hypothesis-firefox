@@ -61,41 +61,42 @@ test('callback waits for background confirmation before closing', async () => {
   assert.equal(closed, 1);
 });
 
-test('bridge forwards session changes and polls while login is open', async () => {
-  let listener;
-  let tick;
-  const storedResponse = { value: undefined };
+test('bridge accepts the background runtime message without session storage', () => {
+  let storageListener;
+  let runtimeListener;
   const posted = [];
   const window = {
     location: { origin: 'moz-extension://our-addon' },
-    open: () => ({}),
     postMessage: (...args) => posted.push(args),
   };
   vm.runInNewContext(bridge, {
     chrome: {
+      runtime: {
+        id: 'our-addon',
+        onMessage: {
+          addListener: fn => {
+            runtimeListener = fn;
+          },
+        },
+      },
       storage: {
-        session: { get: async () => ({ oauthResponse: storedResponse.value }) },
         onChanged: {
           addListener: fn => {
-            listener = fn;
+            storageListener = fn;
           },
         },
       },
     },
     window,
-    URL,
-    setInterval: fn => {
-      tick = fn;
-      return 1;
-    },
-    clearInterval: () => {},
-    setTimeout: () => {},
   });
-  const changes = { oauthResponse: { newValue: { code: 'example', state } } };
-  listener(changes, 'sync');
-  listener({ oauthResponse: { newValue: null } }, 'session');
+  const message = {
+    type: 'hypothesis-firefox-oauth-delivery',
+    code: 'example',
+    state,
+  };
+  runtimeListener(message, { id: 'other-addon' });
   assert.equal(posted.length, 0);
-  listener(changes, 'session');
+  runtimeListener(message, { id: 'our-addon' });
   assert.equal(posted.length, 1);
   assert.equal(posted[0][1], 'moz-extension://our-addon');
   assert.deepEqual(
@@ -103,17 +104,9 @@ test('bridge forwards session changes and polls while login is open', async () =
     { type: 'authorization_response', code: 'example', state },
   );
 
-  const nextState = 'fedcba9876543210';
-  window.open(
-    `https://hypothes.is/oauth/authorize?state=${nextState}`,
-    'Log in to Hypothesis',
+  storageListener(
+    { oauthResponse: { newValue: { code: 'backup', state: 'fedcba9876543210' } } },
+    'local',
   );
-  storedResponse.value = { code: 'next-code', state: nextState };
-  tick();
-  await Promise.resolve();
-  assert.equal(posted.length, 2);
-  assert.deepEqual(
-    { ...posted[1][0] },
-    { type: 'authorization_response', code: 'next-code', state: nextState },
-  );
+  assert.equal(posted.length, 1);
 });

@@ -25,6 +25,7 @@ describe('background/index', () => {
       runtime: {
         id: '1234',
         getURL: sinon.stub(),
+        sendMessage: sinon.stub().resolves(),
         requestUpdateCheck: sinon.stub().resolves(),
         onInstalled: eventListenerStub(),
         onMessageExternal: eventListenerStub(),
@@ -107,6 +108,11 @@ describe('background/index', () => {
     assert.equal(accepted, true);
     assert.calledWith(fakeChromeAPI.storage.session.set, {
       oauthResponse: { code: 'example', state: '0123456789abcdef' },
+    });
+    assert.calledWith(fakeChromeAPI.runtime.sendMessage, {
+      type: 'hypothesis-firefox-oauth-delivery',
+      code: 'example',
+      state: '0123456789abcdef',
     });
     await Promise.resolve();
     assert.calledWith(sendResponse, { stored: true });

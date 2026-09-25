@@ -1,13 +1,9 @@
-// The background stores Hypothesis's authorization response in session memory.
-// Deliver it to the bundled client as the window message it already expects.
+// The background sends Hypothesis's authorization response to this extension
+// page, which forwards it in the format expected by the bundled client.
 console.warn('[Hypothesis OAuth] sidebar bridge ready');
 
-/** @type {string | null | undefined} */
-let expectedState;
 /** @type {string | undefined} */
 let deliveredState;
-/** @type {ReturnType<typeof setInterval> | undefined} */
-let poll;
 
 /** @param {unknown} message */
 function deliver(message) {
@@ -20,17 +16,12 @@ function deliver(message) {
     !message.code ||
     typeof message.state !== 'string' ||
     !/^[a-f0-9]{16}$/.test(message.state) ||
-    (expectedState && message.state !== expectedState) ||
     deliveredState === message.state
   ) {
     return;
   }
 
   deliveredState = message.state;
-  if (poll) {
-    clearInterval(poll);
-    poll = undefined;
-  }
   window.postMessage(
     {
       type: 'authorization_response',
@@ -42,59 +33,18 @@ function deliver(message) {
   console.warn('[Hypothesis OAuth] code delivered to sidebar');
 }
 
-function checkStoredResponse() {
-  chrome.storage.session
-    .get('oauthResponse')
-    .then(stored => deliver(stored.oauthResponse))
-    .catch(error =>
-      console.error('[Hypothesis OAuth] session read failed', error),
-    );
-}
-
+// The session storage change is a backup for the runtime message below.
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'session') {
     deliver(changes.oauthResponse?.newValue);
   }
 });
 
-// Firefox may not dispatch a session storage change to the extension iframe.
-// While an OAuth popup is open, also read the stored response until it arrives.
-const originalOpen = window.open.bind(window);
-window.open = (url, target, features) => {
-  const popup = originalOpen(url, target, features);
-  if (typeof url !== 'string') {
-    return popup;
-  }
-
-  let authURL;
-  try {
-    authURL = new URL(url);
-  } catch {
-    return popup;
-  }
+chrome.runtime.onMessage.addListener((message, sender) => {
   if (
-    authURL.origin !== 'https://hypothes.is' ||
-    authURL.pathname !== '/oauth/authorize'
+    sender.id === chrome.runtime.id &&
+    message?.type === 'hypothesis-firefox-oauth-delivery'
   ) {
-    return popup;
+    deliver(message);
   }
-
-  expectedState = authURL.searchParams.get('state');
-  deliveredState = undefined;
-  if (poll) {
-    clearInterval(poll);
-  }
-  checkStoredResponse();
-  poll = setInterval(checkStoredResponse, 500);
-  const activePoll = poll;
-  setTimeout(() => {
-    if (poll === activePoll && poll !== undefined) {
-      clearInterval(poll);
-      poll = undefined;
-      console.error(
-        '[Hypothesis OAuth] timed out waiting for sidebar delivery',
-      );
-    }
-  }, 120000);
-  return popup;
-};
+});
