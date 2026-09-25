@@ -41,6 +41,7 @@ jobs:
           touch node_modules/.uptodate
           make build SETTINGS_FILE=settings/firefox-prod.json dist/hypothesis-firefox.xpi
           node --test tests/firefox-build-test.mjs
+          node --test tests/oauth-relay-test.mjs
           yarn web-ext lint --source-dir build
       - name: Upload unsigned package for inspection
         uses: actions/upload-artifact@v4

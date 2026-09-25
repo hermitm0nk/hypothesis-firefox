@@ -64,6 +64,14 @@
 
   "host_permissions": ["<all_urls>"],
 
+  {{#browserIsFirefox}}
+  "content_scripts": [{
+    "matches": ["https://hypothes.is/oauth/authorize*"],
+    "js": ["oauth-callback.js"],
+    "run_at": "document_start"
+  }],
+  {{/browserIsFirefox}}
+
   "optional_permissions": [
     {{! Used to enumerate frames on certain websites. }}
     "webNavigation"

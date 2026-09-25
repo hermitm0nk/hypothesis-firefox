@@ -33,3 +33,17 @@ test('Hypothesis client is packaged for extension injection', () => {
     entry.resources.includes('client/*'),
   ));
 });
+
+test('Firefox relays the OAuth callback to the bundled sidebar', () => {
+  assert.deepEqual(manifest.content_scripts, [
+    {
+      matches: ['https://hypothes.is/oauth/authorize*'],
+      js: ['oauth-callback.js'],
+      run_at: 'document_start',
+    },
+  ]);
+  const app = readFileSync('build/client/app.html', 'utf8');
+  assert.match(app, /\/oauth-message-bridge\.js/);
+  assert.ok(statSync('build/oauth-callback.js').size > 0);
+  assert.ok(statSync('build/oauth-message-bridge.js').size > 0);
+});

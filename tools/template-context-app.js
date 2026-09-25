@@ -43,5 +43,6 @@ const settings = JSON.parse(
 console.log(
   JSON.stringify({
     settings: JSON.stringify(appSettings(settings)),
+    browserIsFirefox: !!settings.browserIsFirefox,
   }),
 );
