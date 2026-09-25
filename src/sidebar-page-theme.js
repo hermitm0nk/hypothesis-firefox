@@ -1,7 +1,5 @@
 // Theme the page-side Hypothesis toolbar. It is rendered in a shadow root on
 // the host page, so these variables must be set on the shadow host itself.
-'use strict';
-
 const palettes = {
   nord: {
     scheme: 'dark',
@@ -88,7 +86,7 @@ const storage = extensionAPI?.storage;
 if (storage?.sync && storage.onChanged) {
   let currentTheme = 'default';
   let sidebarLink;
-  let observer;
+  const observer = new MutationObserver(watchForSidebar);
 
   function applyTheme() {
     const palette = palettes[currentTheme];
@@ -143,7 +141,6 @@ if (storage?.sync && storage.onChanged) {
     }
   }
 
-  observer = new MutationObserver(watchForSidebar);
   observer.observe(document.documentElement, {
     childList: true,
     subtree: true,
