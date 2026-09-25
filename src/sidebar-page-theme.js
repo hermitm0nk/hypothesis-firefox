@@ -113,7 +113,8 @@ if (storage?.sync && storage.onChanged) {
   }
 
   function setTheme(value) {
-    currentTheme = typeof value === 'string' && palettes[value] ? value : 'default';
+    currentTheme =
+      typeof value === 'string' && palettes[value] ? value : 'default';
     applyTheme();
   }
 
@@ -143,7 +144,10 @@ if (storage?.sync && storage.onChanged) {
   }
 
   observer = new MutationObserver(watchForSidebar);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
   storage.onChanged.addListener(onStorageChanged);
   if (globalThis.browser?.storage) {
     storage.sync
