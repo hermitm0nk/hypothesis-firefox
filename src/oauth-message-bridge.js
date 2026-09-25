@@ -33,13 +33,6 @@ function deliver(message) {
   console.warn('[Hypothesis OAuth] code delivered to sidebar');
 }
 
-// The session storage change is a backup for the runtime message below.
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'session') {
-    deliver(changes.oauthResponse?.newValue);
-  }
-});
-
 chrome.runtime.onMessage.addListener((message, sender) => {
   if (
     sender.id === chrome.runtime.id &&

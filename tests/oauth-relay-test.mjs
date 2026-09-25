@@ -61,8 +61,7 @@ test('callback waits for background confirmation before closing', async () => {
   assert.equal(closed, 1);
 });
 
-test('bridge accepts the background runtime message without session storage', () => {
-  let storageListener;
+test('bridge accepts the background runtime message without storage APIs', () => {
   let runtimeListener;
   const posted = [];
   const window = {
@@ -76,13 +75,6 @@ test('bridge accepts the background runtime message without session storage', ()
         onMessage: {
           addListener: fn => {
             runtimeListener = fn;
-          },
-        },
-      },
-      storage: {
-        onChanged: {
-          addListener: fn => {
-            storageListener = fn;
           },
         },
       },
@@ -104,9 +96,4 @@ test('bridge accepts the background runtime message without session storage', ()
     { type: 'authorization_response', code: 'example', state },
   );
 
-  storageListener(
-    { oauthResponse: { newValue: { code: 'backup', state: 'fedcba9876543210' } } },
-    'local',
-  );
-  assert.equal(posted.length, 1);
 });
