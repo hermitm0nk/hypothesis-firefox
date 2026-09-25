@@ -2,10 +2,14 @@
 // Deliver it to the bundled client as the window message it already expects.
 console.warn('[Hypothesis OAuth] sidebar bridge ready');
 
+/** @type {string | null | undefined} */
 let expectedState;
+/** @type {string | undefined} */
 let deliveredState;
+/** @type {ReturnType<typeof setInterval> | undefined} */
 let poll;
 
+/** @param {unknown} message */
 function deliver(message) {
   if (
     typeof message !== 'object' ||
@@ -84,7 +88,7 @@ window.open = (url, target, features) => {
   poll = setInterval(checkStoredResponse, 500);
   const activePoll = poll;
   setTimeout(() => {
-    if (poll === activePoll) {
+    if (poll === activePoll && poll !== undefined) {
       clearInterval(poll);
       poll = undefined;
       console.error(
