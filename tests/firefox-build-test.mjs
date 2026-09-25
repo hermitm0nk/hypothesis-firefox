@@ -12,6 +12,15 @@ test('Firefox launches the local background bundle', () => {
     manifest.browser_specific_settings.gecko.id,
     'hypothesis-firefox@hermitm0nk.github',
   );
+  assert.deepEqual(
+    manifest.browser_specific_settings.gecko.data_collection_permissions.required,
+    [
+      'personallyIdentifyingInfo',
+      'authenticationInfo',
+      'browsingActivity',
+      'websiteContent',
+    ],
+  );
   assert.ok(statSync('build/extension.bundle.js').size > 0);
 });
 
