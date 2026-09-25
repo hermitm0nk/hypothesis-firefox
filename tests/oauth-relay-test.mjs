@@ -64,7 +64,7 @@ test('callback waits for background confirmation before closing', async () => {
 test('bridge forwards session changes and polls while login is open', async () => {
   let listener;
   let tick;
-  let storedResponse;
+  const storedResponse = { value: undefined };
   const posted = [];
   const window = {
     location: { origin: 'moz-extension://our-addon' },
@@ -74,7 +74,7 @@ test('bridge forwards session changes and polls while login is open', async () =
   vm.runInNewContext(bridge, {
     chrome: {
       storage: {
-        session: { get: async () => ({ oauthResponse: storedResponse }) },
+        session: { get: async () => ({ oauthResponse: storedResponse.value }) },
         onChanged: {
           addListener: fn => {
             listener = fn;
@@ -108,7 +108,7 @@ test('bridge forwards session changes and polls while login is open', async () =
     `https://hypothes.is/oauth/authorize?state=${nextState}`,
     'Log in to Hypothesis',
   );
-  storedResponse = { code: 'next-code', state: nextState };
+  storedResponse.value = { code: 'next-code', state: nextState };
   tick();
   await Promise.resolve();
   assert.equal(posted.length, 2);
