@@ -25,4 +25,5 @@ chrome.storage.onChanged.addListener((changes, area) => {
     },
     window.location.origin,
   );
+  console.info('[Hypothesis OAuth] code delivered to sidebar');
 });

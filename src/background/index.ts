@@ -42,8 +42,14 @@ export async function init() {
     const session = chromeAPI.storage.session;
     session
       .set({ oauthResponse: response })
-      .then(() => sendResponse({ stored: true }))
-      .catch(() => sendResponse({ stored: false }));
+      .then(() => {
+        console.info('[Hypothesis OAuth] background stored code');
+        sendResponse({ stored: true });
+      })
+      .catch(error => {
+        console.error('[Hypothesis OAuth] background storage failed', error);
+        sendResponse({ stored: false });
+      });
 
     // Authorization codes are short-lived. Remove a response that no open
     // sidebar consumed, without removing a newer login attempt.
