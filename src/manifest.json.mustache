@@ -16,9 +16,10 @@
   {{/key}}
 
   {{#browserIsFirefox}}
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
-      "strict_min_version": "68.0"
+      "id": "hypothesis-firefox@hermitm0nk.github",
+      "strict_min_version": "128.0"
     }
   },
   {{/browserIsFirefox}}
@@ -61,7 +62,12 @@
   ],
 
   "background": {
+    {{#browserIsFirefox}}
+    "scripts": ["extension.bundle.js"]
+    {{/browserIsFirefox}}
+    {{#browserIsChrome}}
     "service_worker": "extension.bundle.js"
+    {{/browserIsChrome}}
   },
 
   "action": {

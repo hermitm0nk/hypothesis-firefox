@@ -30,6 +30,22 @@ process.stdout.on('error', err => {
  *   exact commit and state of the repository.
  */
 function getVersion(buildType) {
+  // Forks created with "main branch only" have no upstream tags. Use a
+  // monotonically increasing Actions run number for our Firefox packages.
+  if (process.env.FIREFOX_FORK_BUILD === '1') {
+    const { version: baseVersion } = JSON.parse(
+      fs.readFileSync('package.json', 'utf8'),
+    );
+    const buildNumber = process.env.GITHUB_RUN_NUMBER ?? '1';
+    if (!/^[1-9][0-9]*$/.test(buildNumber)) {
+      throw new Error('GITHUB_RUN_NUMBER must be a positive integer');
+    }
+    return {
+      version: `${baseVersion}.${buildNumber}`,
+      versionName: `Firefox fork build ${buildNumber}`,
+    };
+  }
+
   const gitInfo = gitDescribeSync();
 
   if (buildType === 'production' && gitInfo.dirty) {
