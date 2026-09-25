@@ -36,11 +36,13 @@
 
     sent = true;
     observer.disconnect();
-    chrome.runtime.sendMessage({
-      type: 'hypothesis-firefox-oauth-response',
-      code: response.code,
-      state: response.state,
-    });
+    chrome.runtime
+      .sendMessage({
+        type: 'hypothesis-firefox-oauth-response',
+        code: response.code,
+        state: response.state,
+      })
+      .catch(error => console.error('Hypothesis OAuth relay failed', error));
   });
 
   observer.observe(document, { childList: true, subtree: true });

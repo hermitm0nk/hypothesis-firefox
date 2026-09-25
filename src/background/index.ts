@@ -19,6 +19,44 @@ export async function init() {
   const extension = new Extension();
   const initialized = extension.init();
 
+  // The OAuth completion page can close before a message reaches the sidebar
+  // iframe. Receive it in the persistent Firefox background page, then use
+  // session storage to notify the iframe without persisting the code to disk.
+  chromeAPI.runtime.onMessage?.addListener((message, sender, sendResponse) => {
+    if (
+      message?.type !== 'hypothesis-firefox-oauth-response' ||
+      sender.id !== chromeAPI.runtime.id ||
+      typeof sender.url !== 'string' ||
+      !/^https:\/\/hypothes\.is\/oauth\/authorize(?:\?|$)/.test(sender.url) ||
+      typeof sender.tab?.id !== 'number' ||
+      typeof message.code !== 'string' ||
+      !message.code ||
+      typeof message.state !== 'string' ||
+      !/^[a-f0-9]{16}$/.test(message.state) ||
+      !chromeAPI.storage.session
+    ) {
+      return;
+    }
+
+    const response = { code: message.code, state: message.state };
+    const session = chromeAPI.storage.session;
+    session
+      .set({ oauthResponse: response })
+      .then(() => sendResponse({ stored: true }))
+      .catch(() => sendResponse({ stored: false }));
+
+    // Authorization codes are short-lived. Remove a response that no open
+    // sidebar consumed, without removing a newer login attempt.
+    setTimeout(async () => {
+      const stored = await session.get('oauthResponse');
+      const pending = stored.oauthResponse as { state?: string } | undefined;
+      if (pending?.state === response.state) {
+        await session.remove('oauthResponse');
+      }
+    }, 30000);
+    return true;
+  });
+
   // Tokens indicating which features the current extension supports.
   const allFeatures = [
     // "activate" message to activate extension on current tab and

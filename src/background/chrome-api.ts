@@ -88,6 +88,11 @@ export function getChromeAPI(chrome = globalThis.chrome) {
       sync: {
         get: chrome.storage.sync.get.bind(chrome.storage.sync),
       },
+      session: chrome.storage.session && {
+        set: chrome.storage.session.set.bind(chrome.storage.session),
+        get: chrome.storage.session.get.bind(chrome.storage.session),
+        remove: chrome.storage.session.remove.bind(chrome.storage.session),
+      },
     },
 
     // APIs that require optional permissions.

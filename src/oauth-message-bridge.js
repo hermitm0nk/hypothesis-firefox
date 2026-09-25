@@ -1,12 +1,11 @@
 // The bundled Hypothesis client accepts the authorization code as a window
-// message. Only relay responses sent by our content script on Hypothesis's
-// authorization page. The client also checks the unpredictable OAuth state.
-chrome.runtime.onMessage.addListener((message, sender) => {
+// message. The background page validates the Hypothesis callback, then writes
+// it to in-memory session storage. The client checks the OAuth state as well.
+chrome.storage.onChanged.addListener((changes, area) => {
+  const message = changes.oauthResponse?.newValue;
   if (
-    sender.id !== chrome.runtime.id ||
-    typeof sender.url !== 'string' ||
-    !/^https:\/\/hypothes\.is\/oauth\/authorize(?:\?|$)/.test(sender.url) ||
-    message?.type !== 'hypothesis-firefox-oauth-response' ||
+    area !== 'session' ||
+    !message ||
     typeof message.code !== 'string' ||
     !message.code ||
     typeof message.state !== 'string' ||

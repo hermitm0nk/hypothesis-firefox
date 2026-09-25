@@ -10,7 +10,7 @@ test('Firefox launches the local background bundle', () => {
   assert.equal(manifest.background.service_worker, undefined);
   assert.equal(
     manifest.browser_specific_settings.gecko.id,
-    'hypothesis-firefox@hermitm0nk.github',
+    'hypothesis-firefox-unsigned-test@hermitm0nk.github',
   );
   assert.deepEqual(
     manifest.browser_specific_settings.gecko.data_collection_permissions.required,

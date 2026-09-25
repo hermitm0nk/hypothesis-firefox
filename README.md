@@ -1,5 +1,11 @@
 # Hypothesis for Firefox (community build)
 
+## Temporary unsigned OAuth test
+
+This `oauth-relay-unsigned` branch builds an unsigned XPI without using AMO credentials. Download the `hypothesis-firefox-unsigned-test` artifact from the [branch's Actions run](https://github.com/hermitm0nk/hypothesis-firefox/actions/workflows/firefox-unsigned-test.yml), unzip the artifact, then open `about:debugging#/runtime/this-firefox` in Firefox. Select **Load Temporary Add-on** and choose `hypothesis-firefox-unsigned-test.xpi`. Disable the existing Hypothesis Firefox extension during the test so only one copy injects a sidebar. The test build has a distinct add-on ID and will not replace the signed installation. Firefox removes a temporary add-on on restart; repeat the load if you want to test again.
+
+The new OAuth relay registers a receiver in the background page and sends the callback to the sidebar through session storage. After logging in, check whether the sidebar shows the account and whether the Network panel records the `/api/token` request. The unsigned XPI is for temporary `about:debugging` installation, not ordinary persistent installation.
+
 This public fork of [hypothesis/browser-extension](https://github.com/hypothesis/browser-extension) builds the existing Hypothesis client as a Firefox WebExtension. It is **not an official Hypothesis release**. The original code and bundled third-party components retain their respective licenses; see [LICENSE](LICENSE).
 
 ## Why this addresses the bookmarklet's CSP failure

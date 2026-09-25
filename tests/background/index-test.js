@@ -23,10 +23,12 @@ describe('background/index', () => {
   beforeEach(() => {
     fakeChromeAPI = {
       runtime: {
+        id: '1234',
         getURL: sinon.stub(),
         requestUpdateCheck: sinon.stub().resolves(),
         onInstalled: eventListenerStub(),
         onMessageExternal: eventListenerStub(),
+        onMessage: eventListenerStub(),
         onUpdateAvailable: eventListenerStub(),
         setUninstallURL: sinon.stub().resolves(),
       },
@@ -35,6 +37,13 @@ describe('background/index', () => {
       },
       tabs: {
         update: sinon.stub(),
+      },
+      storage: {
+        session: {
+          set: sinon.stub().resolves(),
+          get: sinon.stub().resolves({}),
+          remove: sinon.stub().resolves(),
+        },
       },
     };
 
@@ -76,6 +85,31 @@ describe('background/index', () => {
 
   it('shows survey to users after extension is uninstalled', () => {
     assert.calledWith(fakeChromeAPI.runtime.setUninstallURL, uninstallURL);
+  });
+
+  it('stores a validated OAuth callback in session memory', async () => {
+    const cb = fakeChromeAPI.runtime.onMessage.addListener.args[0][0];
+    const sendResponse = sinon.stub();
+    const accepted = cb(
+      {
+        type: 'hypothesis-firefox-oauth-response',
+        code: 'example',
+        state: '0123456789abcdef',
+      },
+      {
+        id: '1234',
+        url: 'https://hypothes.is/oauth/authorize?response_mode=web_message',
+        tab: { id: 20 },
+      },
+      sendResponse,
+    );
+
+    assert.equal(accepted, true);
+    assert.calledWith(fakeChromeAPI.storage.session.set, {
+      oauthResponse: { code: 'example', state: '0123456789abcdef' },
+    });
+    await Promise.resolve();
+    assert.calledWith(sendResponse, { stored: true });
   });
 
   describe('bouncer (hyp.is) message handling', () => {

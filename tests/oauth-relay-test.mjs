@@ -23,7 +23,14 @@ test('callback relays the code and state from Hypothesis completion page', () =>
     window,
     location: { pathname: '/oauth/authorize' },
     document: { querySelector: () => page },
-    chrome: { runtime: { sendMessage: message => messages.push(message) } },
+    chrome: {
+      runtime: {
+        sendMessage: message => {
+          messages.push(message);
+          return Promise.resolve();
+        },
+      },
+    },
     MutationObserver: class {
       constructor(callback) {
         observe = callback;
@@ -41,14 +48,13 @@ test('callback relays the code and state from Hypothesis completion page', () =>
   );
 });
 
-test('bridge accepts only a response from the add-on on the OAuth page', () => {
+test('bridge forwards session response for the bundled client', () => {
   let listener;
   const posted = [];
   vm.runInNewContext(bridge, {
     chrome: {
-      runtime: {
-        id: 'our-addon',
-        onMessage: {
+      storage: {
+        onChanged: {
           addListener: fn => {
             listener = fn;
           },
@@ -60,24 +66,11 @@ test('bridge accepts only a response from the add-on on the OAuth page', () => {
       postMessage: (...args) => posted.push(args),
     },
   });
-  const message = {
-    type: 'hypothesis-firefox-oauth-response',
-    code: 'example',
-    state,
-  };
-  listener(message, {
-    id: 'other-addon',
-    url: 'https://hypothes.is/oauth/authorize?test',
-  });
-  listener(message, {
-    id: 'our-addon',
-    url: 'https://example.org/oauth/authorize?test',
-  });
+  const changes = { oauthResponse: { newValue: { code: 'example', state } } };
+  listener(changes, 'sync');
+  listener({ oauthResponse: { newValue: null } }, 'session');
   assert.equal(posted.length, 0);
-  listener(message, {
-    id: 'our-addon',
-    url: 'https://hypothes.is/oauth/authorize?test',
-  });
+  listener(changes, 'session');
   assert.equal(posted.length, 1);
   assert.equal(posted[0][1], 'moz-extension://our-addon');
   assert.deepEqual(
