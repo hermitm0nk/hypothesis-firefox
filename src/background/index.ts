@@ -41,9 +41,12 @@ export async function init() {
               });
             }
           })
-          .catch(error =>
-            console.error('[Hypothesis OAuth] pending response read failed', error),
-          );
+          .catch(error => {
+            console.error(
+              '[Hypothesis OAuth] pending response read failed',
+              error,
+            );
+          });
       }
     }
   });
