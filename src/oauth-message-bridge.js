@@ -2,11 +2,13 @@
 // message. The background page validates the Hypothesis callback, then writes
 // it to in-memory session storage. The client checks the OAuth state as well.
 chrome.storage.onChanged.addListener((changes, area) => {
-  /** @type {{ code?: unknown, state?: unknown } | undefined} */
   const message = changes.oauthResponse?.newValue;
   if (
     area !== 'session' ||
-    !message ||
+    typeof message !== 'object' ||
+    message === null ||
+    !('code' in message) ||
+    !('state' in message) ||
     typeof message.code !== 'string' ||
     !message.code ||
     typeof message.state !== 'string' ||
