@@ -6,7 +6,7 @@
   if (window !== window.top || location.pathname !== '/oauth/authorize') {
     return;
   }
-  console.info('[Hypothesis OAuth] callback observer ready');
+  console.warn('[Hypothesis OAuth] callback observer ready');
 
   let sent = false;
   const observer = new MutationObserver(() => {
@@ -37,7 +37,7 @@
 
     sent = true;
     observer.disconnect();
-    console.info('[Hypothesis OAuth] code found; waiting for background');
+    console.warn('[Hypothesis OAuth] code found; waiting for background');
     // The server's module script closes the popup. Stop loading that script
     // until the background has safely received the authorization code.
     window.stop();
@@ -49,7 +49,7 @@
       })
       .then(result => {
         if (result?.stored) {
-          console.info('[Hypothesis OAuth] background stored code');
+          console.warn('[Hypothesis OAuth] background stored code');
           window.close();
         } else {
           console.error('Hypothesis OAuth relay was not accepted');

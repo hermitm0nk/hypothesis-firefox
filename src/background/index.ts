@@ -43,7 +43,7 @@ export async function init() {
     session
       .set({ oauthResponse: response })
       .then(() => {
-        console.info('[Hypothesis OAuth] background stored code');
+        console.warn('[Hypothesis OAuth] background stored code');
         sendResponse({ stored: true });
       })
       .catch(error => {
