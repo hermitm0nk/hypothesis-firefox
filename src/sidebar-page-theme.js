@@ -1,5 +1,9 @@
 // Theme the page-side Hypothesis toolbar. It is rendered in a shadow root on
 // the host page, so these variables must be set on the shadow host itself.
+/** @typedef {'nord' | 'catppuccin' | 'tokyo-night-dark' | 'tokyo-night-light'} ThemeName */
+/** @typedef {{scheme: 'dark' | 'light', surface: string, raised: string, border: string, muted: string, text: string, accent: string, accentStrong: string}} ThemePalette */
+
+/** @type {Record<ThemeName, ThemePalette>} */
 const palettes = {
   nord: {
     scheme: 'dark',
@@ -43,6 +47,7 @@ const palettes = {
   },
 };
 
+/** @param {ThemePalette} palette */
 const propertiesFor = palette => ({
   '--color-white': palette.surface,
   '--color-black': '#000000',
@@ -80,17 +85,24 @@ const propertiesFor = palette => ({
 });
 
 const tokenNames = Object.keys(propertiesFor(palettes.nord));
-const extensionAPI = globalThis.browser ?? globalThis.chrome;
+const extensionGlobals = /** @type {any} */ (globalThis);
+const extensionAPI = extensionGlobals.browser ?? extensionGlobals.chrome;
 const storage = extensionAPI?.storage;
 
 if (storage?.sync && storage.onChanged) {
+  /** @type {ThemeName | 'default'} */
   let currentTheme = 'default';
-  let sidebarLink;
+  /** @type {HTMLLinkElement | null} */
+  let sidebarLink = null;
   const observer = new MutationObserver(watchForSidebar);
 
   function applyTheme() {
-    const palette = palettes[currentTheme];
-    document.querySelectorAll('hypothesis-sidebar').forEach(sidebar => {
+    const palette =
+      currentTheme === 'default' ? undefined : palettes[currentTheme];
+    const sidebars = /** @type {NodeListOf<HTMLElement>} */ (
+      document.querySelectorAll('hypothesis-sidebar')
+    );
+    sidebars.forEach(sidebar => {
       if ((sidebar.dataset.hypothesisTheme ?? 'default') === currentTheme) {
         return;
       }
@@ -110,10 +122,20 @@ if (storage?.sync && storage.onChanged) {
     });
   }
 
+  /** @param {unknown} value */
   function setTheme(value) {
-    currentTheme =
-      typeof value === 'string' && palettes[value] ? value : 'default';
+    currentTheme = isThemeName(value) ? value : 'default';
     applyTheme();
+  }
+
+  /** @param {unknown} value @returns {value is ThemeName} */
+  function isThemeName(value) {
+    return (
+      value === 'nord' ||
+      value === 'catppuccin' ||
+      value === 'tokyo-night-dark' ||
+      value === 'tokyo-night-light'
+    );
   }
 
   function stop() {
@@ -121,6 +143,10 @@ if (storage?.sync && storage.onChanged) {
     storage.onChanged.removeListener(onStorageChanged);
   }
 
+  /**
+   * @param {{sidebarTheme?: {newValue?: unknown}}} changes
+   * @param {string} areaName
+   */
   function onStorageChanged(changes, areaName) {
     if (areaName === 'sync' && changes.sidebarTheme) {
       setTheme(changes.sidebarTheme.newValue);
@@ -128,8 +154,10 @@ if (storage?.sync && storage.onChanged) {
   }
 
   function watchForSidebar() {
-    const link = document.querySelector(
-      'link[type="application/annotator+html"][rel="sidebar"]',
+    const link = /** @type {HTMLLinkElement | null} */ (
+      document.querySelector(
+        'link[type="application/annotator+html"][rel="sidebar"]',
+      )
     );
     if (link && link !== sidebarLink) {
       sidebarLink = link;
@@ -141,20 +169,22 @@ if (storage?.sync && storage.onChanged) {
     }
   }
 
+  /** @param {{sidebarTheme?: unknown}} preferences */
+  const onStorageGet = ({ sidebarTheme }) => setTheme(sidebarTheme);
+  const defaultSettings = { sidebarTheme: 'default' };
+
   observer.observe(document.documentElement, {
     childList: true,
     subtree: true,
   });
   storage.onChanged.addListener(onStorageChanged);
-  if (globalThis.browser?.storage) {
+  if (extensionGlobals.browser?.storage) {
     storage.sync
-      .get({ sidebarTheme: 'default' })
-      .then(({ sidebarTheme }) => setTheme(sidebarTheme))
+      .get(defaultSettings)
+      .then(onStorageGet)
       .catch(() => {});
   } else {
-    storage.sync.get({ sidebarTheme: 'default' }, ({ sidebarTheme }) => {
-      setTheme(sidebarTheme);
-    });
+    storage.sync.get(defaultSettings, onStorageGet);
   }
   watchForSidebar();
 }
