@@ -32,6 +32,16 @@ The [GitHub Actions workflow](.github/workflows/continuous-integration.yml) runs
 
 The packaged client currently uses the upstream Firefox `oauthClientId`. Firefox relays the authorization result from Hypothesis's popup into the packaged sidebar when the server's `window.opener.postMessage` callback does not reach the extension iframe. The client still validates the OAuth state before exchanging the code. This callback fallback needs live verification in Firefox after signing, including token exchange and refresh; a separate registered OAuth client may be necessary if the server rejects this fork's origin. The packaged sidebar and site CSP behavior can be tested independently of login.
 
+## Themes and keyboard shortcut
+
+In the extension's **Options**, choose the default Hypothesis colors, Nord, Catppuccin Mocha, Tokyo Night, or Tokyo Night Light. The selection is saved in Firefox sync storage and updates open sidebars. The theme colors are local CSS overrides for the bundled client; upstream UI changes may need new overrides.
+
+Press **Alt+Shift+H** to toggle Hypothesis on the active tab. To choose a different shortcut, open Firefox **Add-ons and Themes**, use the gear menu, and select **Manage Extension Shortcuts**.
+
+## Download a signed XPI
+
+Each successful push to `main` with AMO credentials publishes the signed XPI as a [GitHub Release](https://github.com/hermitm0nk/hypothesis-firefox/releases) and uploads it as a workflow artifact. Download the `.xpi` from the release assets and open it with Firefox to install. The unsigned artifact is for inspection only.
+
 ## Provenance
 
 Based on the Hypothesis browser extension at the fork point, with the Firefox background manifest, add-on identity, packaging tests, and signing workflow adapted here. No remote executable script is fetched at runtime by the extension loader. See upstream [development instructions](docs/building.md) for details of the underlying client.

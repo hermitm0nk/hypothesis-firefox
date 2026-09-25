@@ -4,6 +4,7 @@
 chrome.runtime.onMessage.addListener((message, sender) => {
   if (
     sender.id !== chrome.runtime.id ||
+    typeof sender.url !== 'string' ||
     !/^https:\/\/hypothes\.is\/oauth\/authorize(?:\?|$)/.test(sender.url) ||
     message?.type !== 'hypothesis-firefox-oauth-response' ||
     typeof message.code !== 'string' ||

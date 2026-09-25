@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   firefox:
@@ -57,6 +57,8 @@ jobs:
           mkdir -p signed
           yarn web-ext sign --source-dir build --artifacts-dir signed \
             --channel unlisted --api-key "$AMO_API_KEY" --api-secret "$AMO_API_SECRET"
+          version=$(node -p "require('./package.json').version")
+          mv signed/*.xpi "signed/hypothesis-firefox-v${version}-build${GITHUB_RUN_NUMBER}.xpi"
       - name: Upload signed installable XPI
         if: github.event_name != 'pull_request' && env.AMO_API_KEY != '' && env.AMO_API_SECRET != ''
         uses: actions/upload-artifact@v4
@@ -64,3 +66,13 @@ jobs:
           name: firefox-signed-installable-xpi
           path: signed/*.xpi
           if-no-files-found: error
+      - name: Publish signed XPI as a GitHub Release
+        if: github.event_name != 'pull_request' && env.AMO_API_KEY != '' && env.AMO_API_SECRET != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          gh release create "v${version}-firefox.${GITHUB_RUN_NUMBER}" signed/*.xpi \
+            --target "$GITHUB_SHA" \
+            --title "Hypothesis Firefox v${version} (build ${GITHUB_RUN_NUMBER})" \
+            --notes "Community Firefox build. The attached XPI is signed by Mozilla for direct installation in Firefox."

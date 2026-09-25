@@ -1,0 +1,108 @@
+/* The upstream sidebar uses Tailwind color tokens. Override those tokens in
+   the packaged extension page to theme existing controls and annotation cards. */
+:root[data-hypothesis-theme="nord"] {
+  color-scheme: dark;
+  --theme-surface: #2e3440;
+  --theme-raised: #3b4252;
+  --theme-subtle: #434c5e;
+  --theme-border: #4c566a;
+  --theme-muted: #d8dee9;
+  --theme-text: #eceff4;
+  --theme-accent: #88c0d0;
+  --theme-accent-strong: #8fbcbb;
+  --theme-success: #a3be8c;
+  --theme-warning: #ebcb8b;
+  --theme-error: #bf616a;
+}
+
+:root[data-hypothesis-theme="catppuccin"] {
+  color-scheme: dark;
+  --theme-surface: #1e1e2e;
+  --theme-raised: #313244;
+  --theme-subtle: #45475a;
+  --theme-border: #585b70;
+  --theme-muted: #bac2de;
+  --theme-text: #cdd6f4;
+  --theme-accent: #cba6f7;
+  --theme-accent-strong: #b4befe;
+  --theme-success: #a6e3a1;
+  --theme-warning: #f9e2af;
+  --theme-error: #f38ba8;
+}
+
+:root[data-hypothesis-theme="tokyo-night-dark"] {
+  color-scheme: dark;
+  --theme-surface: #1a1b26;
+  --theme-raised: #24283b;
+  --theme-subtle: #292e42;
+  --theme-border: #414868;
+  --theme-muted: #a9b1d6;
+  --theme-text: #c0caf5;
+  --theme-accent: #7aa2f7;
+  --theme-accent-strong: #bb9af7;
+  --theme-success: #9ece6a;
+  --theme-warning: #e0af68;
+  --theme-error: #f7768e;
+}
+
+:root[data-hypothesis-theme="tokyo-night-light"] {
+  color-scheme: light;
+  --theme-surface: #d5d6db;
+  --theme-raised: #e9e9ed;
+  --theme-subtle: #c4c6cd;
+  --theme-border: #9699a3;
+  --theme-muted: #4c505e;
+  --theme-text: #343b58;
+  --theme-accent: #34548a;
+  --theme-accent-strong: #5a4a78;
+  --theme-success: #485e30;
+  --theme-warning: #8f5e15;
+  --theme-error: #8c4351;
+}
+
+:root[data-hypothesis-theme]:not([data-hypothesis-theme="default"]) {
+  --color-white: var(--theme-surface);
+  --color-black: var(--theme-text);
+  --color-border: var(--theme-border);
+  --color-grey-0: var(--theme-surface);
+  --color-grey-1: var(--theme-raised);
+  --color-grey-2: var(--theme-raised);
+  --color-grey-3: var(--theme-border);
+  --color-grey-4: var(--theme-border);
+  --color-grey-5: var(--theme-muted);
+  --color-grey-6: var(--theme-muted);
+  --color-grey-7: var(--theme-text);
+  --color-grey-8: var(--theme-text);
+  --color-grey-9: var(--theme-text);
+  --color-slate-0: var(--theme-surface);
+  --color-slate-1: var(--theme-raised);
+  --color-slate-3: var(--theme-border);
+  --color-slate-5: var(--theme-muted);
+  --color-slate-7: var(--theme-text);
+  --color-slate-9: var(--theme-text);
+  --color-color-text: var(--theme-text);
+  --color-color-text-light: var(--theme-muted);
+  --color-color-text-inverted: var(--theme-surface);
+  --color-brand: var(--theme-accent);
+  --color-brand-dark: var(--theme-accent-strong);
+  --color-blue-focus: var(--theme-accent);
+  --color-ring: var(--theme-accent);
+  --color-green: var(--theme-success);
+  --color-green-dark: var(--theme-success);
+  --color-yellow: var(--theme-warning);
+  --color-red: var(--theme-error);
+  --color-red-dark: var(--theme-error);
+}
+
+:root[data-hypothesis-theme]:not([data-hypothesis-theme="default"]) body,
+:root[data-hypothesis-theme]:not([data-hypothesis-theme="default"]) input,
+:root[data-hypothesis-theme]:not([data-hypothesis-theme="default"]) textarea,
+:root[data-hypothesis-theme]:not([data-hypothesis-theme="default"]) select {
+  background-color: var(--theme-surface);
+  color: var(--theme-text);
+}
+
+:root[data-hypothesis-theme]:not([data-hypothesis-theme="default"]) .scroll-shadows {
+  background-image: none;
+  background-color: var(--theme-surface);
+}

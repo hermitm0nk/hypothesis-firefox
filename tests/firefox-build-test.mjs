@@ -47,3 +47,15 @@ test('Firefox relays the OAuth callback to the bundled sidebar', () => {
   assert.ok(statSync('build/oauth-callback.js').size > 0);
   assert.ok(statSync('build/oauth-message-bridge.js').size > 0);
 });
+
+test('Firefox packages themes and a configurable keyboard command', () => {
+  const app = readFileSync('build/client/app.html', 'utf8');
+  assert.match(app, /\/sidebar-theme\.css/);
+  assert.match(app, /\/sidebar-theme\.js/);
+  assert.ok(statSync('build/sidebar-theme.css').size > 0);
+  assert.ok(statSync('build/sidebar-theme.js').size > 0);
+  assert.equal(
+    manifest.commands['toggle-hypothesis'].suggested_key.default,
+    'Alt+Shift+H',
+  );
+});

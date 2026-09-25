@@ -60,6 +60,9 @@ describe('Extension', () => {
       browserAction: {
         onClicked: new FakeListener(),
       },
+      commands: {
+        onCommand: new FakeListener(),
+      },
 
       runtime: {
         getURL: function (path) {
@@ -236,10 +239,20 @@ describe('Extension', () => {
     it('sets up event listeners', async () => {
       await ext.init();
       assert.ok(fakeChromeAPI.browserAction.onClicked.listener);
+      assert.ok(fakeChromeAPI.commands.onCommand.listener);
       assert.ok(fakeChromeAPI.tabs.onCreated.listener);
       assert.ok(fakeChromeAPI.tabs.onUpdated.listener);
       assert.ok(fakeChromeAPI.tabs.onRemoved.listener);
       assert.ok(fakeChromeAPI.tabs.onReplaced.listener);
+    });
+
+    it('toggles the current tab from the keyboard command', async () => {
+      const tab = { id: 42, url: 'https://example.com' };
+      fakeChromeAPI.tabs.query.resolves([tab]);
+      await ext.init();
+      fakeTabState.activateTab.resetHistory();
+      await fakeChromeAPI.commands.onCommand.listener('toggle-hypothesis');
+      assert.calledWith(fakeTabState.activateTab, 42);
     });
 
     it('initializes state for existing tabs', async () => {

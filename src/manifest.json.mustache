@@ -93,6 +93,15 @@
     }
   },
 
+  {{#browserIsFirefox}}
+  "commands": {
+    "toggle-hypothesis": {
+      "suggested_key": { "default": "Alt+Shift+H" },
+      "description": "Toggle Hypothesis on the current tab"
+    }
+  },
+  {{/browserIsFirefox}}
+
   {{#browserIsChrome}}
   "externally_connectable": {
     {{#bouncerUrl}}"matches": ["{{&bouncerUrl}}*"]{{/bouncerUrl}}

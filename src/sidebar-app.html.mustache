@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
+    {{#browserIsFirefox}}<link rel="stylesheet" href="/sidebar-theme.css">{{/browserIsFirefox}}
   </head>
   <body>
     <hypothesis-app></hypothesis-app>
@@ -11,6 +12,7 @@
     </script>
 
     {{#browserIsFirefox}}<script src="/oauth-message-bridge.js"></script>{{/browserIsFirefox}}
+    {{#browserIsFirefox}}<script src="/sidebar-theme.js"></script>{{/browserIsFirefox}}
     <script src="/client/build/boot.js"></script>
   </body>
 </html>

@@ -413,6 +413,19 @@ export class Extension {
     this.init = async () => {
       chromeAPI.browserAction.onClicked.addListener(onBrowserActionClicked);
 
+      chromeAPI.commands?.onCommand?.addListener(async command => {
+        if (command !== 'toggle-hypothesis') {
+          return;
+        }
+        const [tab] = await chromeAPI.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        if (tab?.id) {
+          await onBrowserActionClicked(tab);
+        }
+      });
+
       // Set up listeners for tab events.
       chromeAPI.tabs.onCreated.addListener(onTabCreated);
 

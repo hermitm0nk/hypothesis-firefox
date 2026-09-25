@@ -55,6 +55,7 @@ extension: build/client/notebook.html
 extension: build/client/profile.html
 extension: build/unload-client.js
 extension: build/oauth-callback.js build/oauth-message-bridge.js
+extension: build/sidebar-theme.js build/sidebar-theme.css
 extension: build/pdfjs-init.js
 extension: $(addprefix build/,$(EXTENSION_SRC))
 
@@ -80,6 +81,8 @@ build/client/profile.html: build/client/app.html
 build/unload-client.js: src/unload-client.js
 	cp $< $@
 build/oauth-%.js: src/oauth-%.js
+	cp $< $@
+build/sidebar-theme.%: src/sidebar-theme.%
 	cp $< $@
 build/pdfjs-%.js: src/pdfjs-%.js
 	cp $< $@

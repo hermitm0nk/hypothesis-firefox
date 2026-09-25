@@ -33,6 +33,10 @@ export function getChromeAPI(chrome = globalThis.chrome) {
       setTitle: browserAction.setTitle,
     },
 
+    commands: {
+      onCommand: chrome.commands?.onCommand,
+    },
+
     extension: {
       isAllowedFileSchemeAccess: chrome.extension.isAllowedFileSchemeAccess,
     },
