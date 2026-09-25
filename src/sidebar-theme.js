@@ -6,10 +6,10 @@ const themes = new Set([
   'tokyo-night-light',
 ]);
 
+/** @param {unknown} theme */
 function applyTheme(theme) {
-  document.documentElement.dataset.hypothesisTheme = themes.has(theme)
-    ? theme
-    : 'default';
+  document.documentElement.dataset.hypothesisTheme =
+    typeof theme === 'string' && themes.has(theme) ? theme : 'default';
 }
 
 chrome.storage.sync.get({ sidebarTheme: 'default' }, ({ sidebarTheme }) => {

@@ -26,7 +26,10 @@ function loadOptions() {
     },
     items => {
       badgeCheckbox().checked = !!items.badge;
-      themeSelect().value = items.sidebarTheme;
+      themeSelect().value =
+        typeof items.sidebarTheme === 'string'
+          ? items.sidebarTheme
+          : 'default';
     },
   );
 }
