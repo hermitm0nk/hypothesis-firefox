@@ -372,7 +372,19 @@ export class SidebarInjector {
 
     async function injectIntoHTML(tab: Tab, config: object) {
       await injectConfig(tab.id, config);
+      await injectPageThemeBridge(tab.id);
       return executeClientBootScript(tab.id);
+    }
+
+    async function injectPageThemeBridge(tabId: number, frameId?: number) {
+      if (!chromeAPI.runtime.getURL('/').startsWith('moz-extension://')) {
+        return;
+      }
+      await executeScript({
+        tabId,
+        frameId,
+        file: '/sidebar-page-theme.js',
+      });
     }
 
     async function removeFromPDF(tab: Tab) {
@@ -462,6 +474,7 @@ export class SidebarInjector {
         throw new Error('Book viewer frame not found');
       }
       await injectConfig(tab.id, config, frame.frameId);
+      await injectPageThemeBridge(tab.id, frame.frameId);
       await executeClientBootScript(tab.id, frame.frameId);
     }
 

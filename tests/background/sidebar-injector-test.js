@@ -325,6 +325,19 @@ describe('SidebarInjector', () => {
         });
       });
 
+      it('injects the theme bridge in Firefox before the client', async () => {
+        fakeChromeAPI.runtime.getURL = sinon
+          .stub()
+          .callsFake(path => `moz-extension://hypothesis${path}`);
+
+        await injector.injectIntoTab({ id: 1, url: 'https://example.com' });
+
+        assert.deepEqual(
+          fakeExecuteScript.args.map(([{ file }]) => file),
+          ['/sidebar-page-theme.js', '/client/build/boot.js'],
+        );
+      });
+
       it('reports an error if Hypothesis is already embedded', () => {
         embedScriptReturnValue = {
           installedURL: 'https://hypothes.is/app.html',

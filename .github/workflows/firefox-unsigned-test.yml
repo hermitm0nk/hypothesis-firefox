@@ -37,7 +37,10 @@ jobs:
           make clean
           touch node_modules/.uptodate
           make build SETTINGS_FILE=settings/firefox-prod.json dist/hypothesis-firefox-unsigned-test.xpi
-          node --test tests/firefox-build-test.mjs tests/oauth-relay-test.mjs
+          node --test \
+            tests/firefox-build-test.mjs \
+            tests/oauth-relay-test.mjs \
+            tests/sidebar-page-theme-test.mjs
           yarn web-ext lint --source-dir build
       - name: Upload temporary installation XPI
         uses: actions/upload-artifact@v4

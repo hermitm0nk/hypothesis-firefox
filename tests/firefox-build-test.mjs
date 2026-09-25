@@ -54,6 +54,11 @@ test('Firefox packages themes and a configurable keyboard command', () => {
   assert.match(app, /\/sidebar-theme\.js/);
   assert.ok(statSync('build/sidebar-theme.css').size > 0);
   assert.ok(statSync('build/sidebar-theme.js').size > 0);
+  assert.ok(statSync('build/sidebar-page-theme.js').size > 0);
+  assert.match(
+    readFileSync('build/pdfjs-init.js', 'utf8'),
+    /sidebar-page-theme\.js/,
+  );
   assert.equal(
     manifest.commands['toggle-hypothesis'].suggested_key.default,
     'Alt+Shift+H',
