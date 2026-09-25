@@ -25,11 +25,11 @@ describe('background/index', () => {
       runtime: {
         id: '1234',
         getURL: sinon.stub(),
-        sendMessage: sinon.stub().resolves(),
         requestUpdateCheck: sinon.stub().resolves(),
         onInstalled: eventListenerStub(),
         onMessageExternal: eventListenerStub(),
         onMessage: eventListenerStub(),
+        onConnect: eventListenerStub(),
         onUpdateAvailable: eventListenerStub(),
         setUninstallURL: sinon.stub().resolves(),
       },
@@ -91,6 +91,13 @@ describe('background/index', () => {
   it('stores a validated OAuth callback in session memory', async () => {
     const cb = fakeChromeAPI.runtime.onMessage.addListener.args[0][0];
     const sendResponse = sinon.stub();
+    const connectedPort = {
+      name: 'hypothesis-firefox-oauth',
+      onDisconnect: eventListenerStub(),
+      postMessage: sinon.stub(),
+    };
+    const onConnect = fakeChromeAPI.runtime.onConnect.addListener.args[0][0];
+    onConnect(connectedPort);
     const accepted = cb(
       {
         type: 'hypothesis-firefox-oauth-response',
@@ -110,11 +117,12 @@ describe('background/index', () => {
       oauthResponse: { code: 'example', state: '0123456789abcdef' },
     });
     await Promise.resolve();
-    assert.calledWith(fakeChromeAPI.runtime.sendMessage, {
+    assert.calledWith(connectedPort.postMessage, {
       type: 'hypothesis-firefox-oauth-delivery',
       code: 'example',
       state: '0123456789abcdef',
     });
+    await Promise.resolve();
     assert.calledWith(sendResponse, { stored: true });
   });
 

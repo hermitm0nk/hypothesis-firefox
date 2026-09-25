@@ -33,11 +33,9 @@ function deliver(message) {
   console.warn('[Hypothesis OAuth] code delivered to sidebar');
 }
 
-chrome.runtime.onMessage.addListener((message, sender) => {
-  if (
-    sender.id === chrome.runtime.id &&
-    message?.type === 'hypothesis-firefox-oauth-delivery'
-  ) {
+const oauthPort = chrome.runtime.connect({ name: 'hypothesis-firefox-oauth' });
+oauthPort.onMessage.addListener(message => {
+  if (message?.type === 'hypothesis-firefox-oauth-delivery') {
     deliver(message);
   }
 });

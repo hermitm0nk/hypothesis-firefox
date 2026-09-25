@@ -61,8 +61,8 @@ test('callback waits for background confirmation before closing', async () => {
   assert.equal(closed, 1);
 });
 
-test('bridge accepts the background runtime message without storage APIs', () => {
-  let runtimeListener;
+test('bridge receives the response over its background port without storage', () => {
+  let portListener;
   const posted = [];
   const window = {
     location: { origin: 'moz-extension://our-addon' },
@@ -71,11 +71,15 @@ test('bridge accepts the background runtime message without storage APIs', () =>
   vm.runInNewContext(bridge, {
     chrome: {
       runtime: {
-        id: 'our-addon',
-        onMessage: {
-          addListener: fn => {
-            runtimeListener = fn;
-          },
+        connect: ({ name }) => {
+          assert.equal(name, 'hypothesis-firefox-oauth');
+          return {
+            onMessage: {
+              addListener: fn => {
+                portListener = fn;
+              },
+            },
+          };
         },
       },
     },
@@ -86,14 +90,11 @@ test('bridge accepts the background runtime message without storage APIs', () =>
     code: 'example',
     state,
   };
-  runtimeListener(message, { id: 'other-addon' });
-  assert.equal(posted.length, 0);
-  runtimeListener(message, { id: 'our-addon' });
+  portListener(message);
   assert.equal(posted.length, 1);
   assert.equal(posted[0][1], 'moz-extension://our-addon');
   assert.deepEqual(
     { ...posted[0][0] },
     { type: 'authorization_response', code: 'example', state },
   );
-
 });

@@ -50,6 +50,7 @@ export function getChromeAPI(chrome = globalThis.chrome) {
       getURL: chrome.runtime.getURL,
       onMessage: chrome.runtime.onMessage,
       onMessageExternal: chrome.runtime.onMessageExternal,
+      onConnect: chrome.runtime.onConnect,
       onInstalled: chrome.runtime.onInstalled,
       onUpdateAvailable: chrome.runtime.onUpdateAvailable,
       reload: chrome.runtime.reload,
@@ -60,7 +61,6 @@ export function getChromeAPI(chrome = globalThis.chrome) {
         : null,
 
       setUninstallURL: chrome.runtime.setUninstallURL,
-      sendMessage: chrome.runtime.sendMessage,
     },
 
     permissions: {
