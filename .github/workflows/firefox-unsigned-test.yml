@@ -1,0 +1,53 @@
+name: Firefox unsigned OAuth test
+
+on:
+  push:
+    branches: [oauth-relay-unsigned]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  firefox:
+    runs-on: ubuntu-latest
+    env:
+      FIREFOX_FORK_BUILD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: yarn
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install dependencies and test browser
+        run: |
+          yarn install --immutable
+          yarn playwright install --with-deps chromium
+          touch node_modules/.uptodate
+      - name: Check formatting, lint and types
+        run: |
+          make checkformatting
+          make lint
+      - name: Run unit tests
+        run: make test
+      - name: Build unsigned Firefox XPI
+        run: |
+          make clean
+          touch node_modules/.uptodate
+          make build SETTINGS_FILE=settings/firefox-prod.json dist/hypothesis-firefox-unsigned-test.xpi
+          node --test \
+            tests/firefox-build-test.mjs \
+            tests/oauth-relay-test.mjs \
+            tests/sidebar-page-theme-test.mjs \
+            tests/sidebar-theme-test.mjs \
+            tests/firefox-update-manifest-test.mjs
+          yarn web-ext lint --source-dir build --self-hosted
+      - name: Upload temporary installation XPI
+        uses: actions/upload-artifact@v4
+        with:
+          name: hypothesis-firefox-unsigned-test
+          path: dist/hypothesis-firefox-unsigned-test.xpi
+          if-no-files-found: error
+          retention-days: 14

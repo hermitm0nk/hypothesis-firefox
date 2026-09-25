@@ -1,5 +1,11 @@
 # Hypothesis for Firefox (community build)
 
+## Temporary unsigned OAuth test
+
+The `oauth-relay-unsigned` branch has a workflow for building an unsigned XPI without AMO credentials. Download the `hypothesis-firefox-unsigned-test` artifact from the [branch's Actions run](https://github.com/hermitm0nk/hypothesis-firefox/actions/workflows/firefox-unsigned-test.yml), unzip it, then open `about:debugging#/runtime/this-firefox` in Firefox. Select **Load Temporary Add-on** and choose `hypothesis-firefox-unsigned-test.xpi`. Disable the installed Hypothesis Firefox extension during the test so only one copy injects a sidebar. Firefox removes a temporary add-on on restart; repeat the load if you want to test again.
+
+The new OAuth relay registers a receiver in the background page and sends the callback to the sidebar through session storage. After logging in, check whether the sidebar shows the account and whether the Network panel records the `/api/token` request. The unsigned XPI is for temporary `about:debugging` installation, not ordinary persistent installation.
+
 This public fork of [hypothesis/browser-extension](https://github.com/hypothesis/browser-extension) builds the existing Hypothesis client as a Firefox WebExtension. It is **not an official Hypothesis release**. The original code and bundled third-party components retain their respective licenses; see [LICENSE](LICENSE).
 
 ## Why this addresses the bookmarklet's CSP failure
@@ -28,7 +34,7 @@ To load temporarily in Firefox, open `about:debugging#/runtime/this-firefox`, se
 
 ## CI and signing
 
-The [GitHub Actions workflow](.github/workflows/continuous-integration.yml) runs formatting, lint, type checking, unit tests, an extension build, a Firefox package check, and `web-ext lint`. On pushes to `main` or manual runs, it additionally requests **unlisted** signing from Mozilla if both repository Actions secrets `AMO_API_KEY` and `AMO_API_SECRET` are set. A successful run uploads a `firefox-signed-installable-xpi` artifact. Create an AMO developer account and [generate API credentials](https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/) to enable this step. Do not put credentials in the repo. The manifest specifies the stable Gecko add-on ID `hypothesis-firefox@hermitm0nk.github` for future updates.
+The [GitHub Actions workflow](.github/workflows/continuous-integration.yml) runs formatting, lint, type checking, unit tests, an extension build, a Firefox package check, and `web-ext lint`. On pushes to `main` or manual runs, it requests **unlisted** signing from Mozilla when both repository Actions secrets `AMO_API_KEY` and `AMO_API_SECRET` are set. The add-on is self-distributed and is not listed on AMO. A successful run uploads a `firefox-signed-installable-xpi` artifact and publishes it in a GitHub Release. The manifest specifies the stable Gecko add-on ID `hypothesis-firefox@hermitm0nk.github` and a GitHub Releases update manifest. Firefox checks that manifest and installs higher signed versions automatically. Install a signed release once to enable automatic updates.
 
 The packaged client currently uses the upstream Firefox `oauthClientId`. Firefox relays the authorization result from Hypothesis's popup into the packaged sidebar when the server's `window.opener.postMessage` callback does not reach the extension iframe. The client still validates the OAuth state before exchanging the code. This callback fallback needs live verification in Firefox after signing, including token exchange and refresh; a separate registered OAuth client may be necessary if the server rejects this fork's origin. The packaged sidebar and site CSP behavior can be tested independently of login.
 
@@ -40,7 +46,7 @@ Press **Alt+Shift+H** to toggle Hypothesis on the active tab. To choose a differ
 
 ## Download a signed XPI
 
-Each successful push to `main` with AMO credentials publishes the signed XPI as a [GitHub Release](https://github.com/hermitm0nk/hypothesis-firefox/releases) and uploads it as a workflow artifact. Download the `.xpi` from the release assets and open it with Firefox to install. The unsigned artifact is for inspection only.
+Each successful push to `main` with AMO credentials publishes the signed XPI and `updates.json` as a [GitHub Release](https://github.com/hermitm0nk/hypothesis-firefox/releases) and uploads the XPI as a workflow artifact. Download the `.xpi` from the release assets and open it with Firefox to install. Later signed versions update automatically through the release manifest. The unsigned artifact is for inspection only.
 
 ## Provenance
 

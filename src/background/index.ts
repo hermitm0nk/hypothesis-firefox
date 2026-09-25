@@ -18,6 +18,92 @@ export const uninstallURL =
 export async function init() {
   const extension = new Extension();
   const initialized = extension.init();
+  const oauthSidebarPorts = new Set<chrome.runtime.Port>();
+
+  chromeAPI.runtime.onConnect.addListener(port => {
+    if (port.name === 'hypothesis-firefox-oauth') {
+      oauthSidebarPorts.add(port);
+      port.onDisconnect.addListener(() => oauthSidebarPorts.delete(port));
+
+      // A sidebar may connect just after the popup callback was stored.
+      const session = chromeAPI.storage.session;
+      if (session) {
+        session
+          .get('oauthResponse')
+          .then(stored => {
+            const response = stored.oauthResponse as
+              | { code?: string; state?: string }
+              | undefined;
+            if (response?.code && response.state) {
+              port.postMessage({
+                type: 'hypothesis-firefox-oauth-delivery',
+                ...response,
+              });
+            }
+          })
+          .catch(error => {
+            console.error(
+              '[Hypothesis OAuth] pending response read failed',
+              error,
+            );
+          });
+      }
+    }
+  });
+
+  // The OAuth completion page can close before a message reaches the sidebar
+  // iframe. Receive it in the persistent Firefox background page, then use
+  // session storage to notify the iframe without persisting the code to disk.
+  chromeAPI.runtime.onMessage?.addListener((message, sender, sendResponse) => {
+    if (
+      message?.type !== 'hypothesis-firefox-oauth-response' ||
+      sender.id !== chromeAPI.runtime.id ||
+      typeof sender.url !== 'string' ||
+      !/^https:\/\/hypothes\.is\/oauth\/authorize(?:\?|$)/.test(sender.url) ||
+      typeof sender.tab?.id !== 'number' ||
+      typeof message.code !== 'string' ||
+      !message.code ||
+      typeof message.state !== 'string' ||
+      !/^[a-f0-9]{16}$/.test(message.state) ||
+      !chromeAPI.storage.session
+    ) {
+      return false;
+    }
+
+    const response = { code: message.code, state: message.state };
+    const session = chromeAPI.storage.session;
+    session
+      .set({ oauthResponse: response })
+      .then(() => {
+        console.warn('[Hypothesis OAuth] background stored code');
+        for (const port of oauthSidebarPorts) {
+          try {
+            port.postMessage({
+              type: 'hypothesis-firefox-oauth-delivery',
+              ...response,
+            });
+          } catch (error) {
+            console.error('[Hypothesis OAuth] sidebar port failed', error);
+          }
+        }
+        sendResponse({ stored: true });
+      })
+      .catch(error => {
+        console.error('[Hypothesis OAuth] background storage failed', error);
+        sendResponse({ stored: false });
+      });
+
+    // Authorization codes are short-lived. Remove a response that no open
+    // sidebar consumed, without removing a newer login attempt.
+    setTimeout(async () => {
+      const stored = await session.get('oauthResponse');
+      const pending = stored.oauthResponse as { state?: string } | undefined;
+      if (pending?.state === response.state) {
+        await session.remove('oauthResponse');
+      }
+    }, 30000);
+    return true;
+  });
 
   // Tokens indicating which features the current extension supports.
   const allFeatures = [

@@ -7,8 +7,11 @@ const callback = readFileSync('src/oauth-callback.js', 'utf8');
 const bridge = readFileSync('src/oauth-message-bridge.js', 'utf8');
 const state = '0123456789abcdef';
 
-test('callback relays the code and state from Hypothesis completion page', () => {
+test('callback waits for background confirmation before closing', async () => {
   let observe;
+  let confirm;
+  let stopped = 0;
+  let closed = 0;
   const messages = [];
   const page = {
     textContent: JSON.stringify({
@@ -17,13 +20,25 @@ test('callback relays the code and state from Hypothesis completion page', () =>
       origin: 'moz-extension://upstream',
     }),
   };
-  const window = {};
+  const window = {
+    stop: () => ++stopped,
+    close: () => ++closed,
+  };
   window.top = window;
   vm.runInNewContext(callback, {
     window,
     location: { pathname: '/oauth/authorize' },
     document: { querySelector: () => page },
-    chrome: { runtime: { sendMessage: message => messages.push(message) } },
+    chrome: {
+      runtime: {
+        sendMessage: message => {
+          messages.push(message);
+          return new Promise(resolve => {
+            confirm = resolve;
+          });
+        },
+      },
+    },
     MutationObserver: class {
       constructor(callback) {
         observe = callback;
@@ -35,49 +50,47 @@ test('callback relays the code and state from Hypothesis completion page', () =>
   observe();
   observe();
   assert.equal(messages.length, 1);
+  assert.equal(stopped, 1);
+  assert.equal(closed, 0);
   assert.deepEqual(
     { ...messages[0] },
     { type: 'hypothesis-firefox-oauth-response', code: 'example', state },
   );
+  confirm({ stored: true });
+  await Promise.resolve();
+  assert.equal(closed, 1);
 });
 
-test('bridge accepts only a response from the add-on on the OAuth page', () => {
-  let listener;
+test('bridge receives the response over its background port without storage', () => {
+  let portListener;
   const posted = [];
+  const window = {
+    location: { origin: 'moz-extension://our-addon' },
+    postMessage: (...args) => posted.push(args),
+  };
   vm.runInNewContext(bridge, {
     chrome: {
       runtime: {
-        id: 'our-addon',
-        onMessage: {
-          addListener: fn => {
-            listener = fn;
-          },
+        connect: ({ name }) => {
+          assert.equal(name, 'hypothesis-firefox-oauth');
+          return {
+            onMessage: {
+              addListener: fn => {
+                portListener = fn;
+              },
+            },
+          };
         },
       },
     },
-    window: {
-      location: { origin: 'moz-extension://our-addon' },
-      postMessage: (...args) => posted.push(args),
-    },
+    window,
   });
   const message = {
-    type: 'hypothesis-firefox-oauth-response',
+    type: 'hypothesis-firefox-oauth-delivery',
     code: 'example',
     state,
   };
-  listener(message, {
-    id: 'other-addon',
-    url: 'https://hypothes.is/oauth/authorize?test',
-  });
-  listener(message, {
-    id: 'our-addon',
-    url: 'https://example.org/oauth/authorize?test',
-  });
-  assert.equal(posted.length, 0);
-  listener(message, {
-    id: 'our-addon',
-    url: 'https://hypothes.is/oauth/authorize?test',
-  });
+  portListener(message);
   assert.equal(posted.length, 1);
   assert.equal(posted[0][1], 'moz-extension://our-addon');
   assert.deepEqual(

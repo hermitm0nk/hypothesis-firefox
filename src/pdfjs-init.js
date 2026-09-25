@@ -35,6 +35,12 @@ async function init() {
 
   document.head.appendChild(configScript);
 
+  if (chrome.runtime.getURL('/').startsWith('moz-extension://')) {
+    const themeScript = document.createElement('script');
+    themeScript.src = '/sidebar-page-theme.js';
+    document.head.appendChild(themeScript);
+  }
+
   const embedScript = document.createElement('script');
   embedScript.src = '/client/build/boot.js';
   document.body.appendChild(embedScript);

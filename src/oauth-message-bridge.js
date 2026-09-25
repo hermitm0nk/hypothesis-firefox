@@ -1,20 +1,27 @@
-// The bundled Hypothesis client accepts the authorization code as a window
-// message. Only relay responses sent by our content script on Hypothesis's
-// authorization page. The client also checks the unpredictable OAuth state.
-chrome.runtime.onMessage.addListener((message, sender) => {
+// The background sends Hypothesis's authorization response to this extension
+// page, which forwards it in the format expected by the bundled client.
+console.warn('[Hypothesis OAuth] sidebar bridge ready');
+
+/** @type {string | undefined} */
+let deliveredState;
+
+/** @param {unknown} message */
+function deliver(message) {
   if (
-    sender.id !== chrome.runtime.id ||
-    typeof sender.url !== 'string' ||
-    !/^https:\/\/hypothes\.is\/oauth\/authorize(?:\?|$)/.test(sender.url) ||
-    message?.type !== 'hypothesis-firefox-oauth-response' ||
+    typeof message !== 'object' ||
+    message === null ||
+    !('code' in message) ||
+    !('state' in message) ||
     typeof message.code !== 'string' ||
     !message.code ||
     typeof message.state !== 'string' ||
-    !/^[a-f0-9]{16}$/.test(message.state)
+    !/^[a-f0-9]{16}$/.test(message.state) ||
+    deliveredState === message.state
   ) {
     return;
   }
 
+  deliveredState = message.state;
   window.postMessage(
     {
       type: 'authorization_response',
@@ -23,4 +30,12 @@ chrome.runtime.onMessage.addListener((message, sender) => {
     },
     window.location.origin,
   );
+  console.warn('[Hypothesis OAuth] code delivered to sidebar');
+}
+
+const oauthPort = chrome.runtime.connect({ name: 'hypothesis-firefox-oauth' });
+oauthPort.onMessage.addListener(message => {
+  if (message?.type === 'hypothesis-firefox-oauth-delivery') {
+    deliver(message);
+  }
 });

@@ -55,6 +55,7 @@ extension: build/client/notebook.html
 extension: build/client/profile.html
 extension: build/unload-client.js
 extension: build/oauth-callback.js build/oauth-message-bridge.js
+extension: build/sidebar-page-theme.js
 extension: build/sidebar-theme.js build/sidebar-theme.css
 extension: build/pdfjs-init.js
 extension: $(addprefix build/,$(EXTENSION_SRC))
@@ -66,6 +67,7 @@ build/manifest.json: src/manifest.json.mustache build/settings.json
 build/client/build: node_modules/hypothesis/build/manifest.json
 	@mkdir -p $@
 	cp -R node_modules/hypothesis/build/* $@
+	node tools/patch-sidebar-theme-css.js $@/styles/sidebar.css
 	@# Replace boot template with extension-specific URLs.
 	node tools/render-boot-template.js $@/boot-template.js $@/boot.js
 	rm $@/boot-template.js
@@ -81,6 +83,8 @@ build/client/profile.html: build/client/app.html
 build/unload-client.js: src/unload-client.js
 	cp $< $@
 build/oauth-%.js: src/oauth-%.js
+	cp $< $@
+build/sidebar-page-theme.js: src/sidebar-page-theme.js
 	cp $< $@
 build/sidebar-theme.%: src/sidebar-theme.%
 	cp $< $@
