@@ -7,8 +7,11 @@ const callback = readFileSync('src/oauth-callback.js', 'utf8');
 const bridge = readFileSync('src/oauth-message-bridge.js', 'utf8');
 const state = '0123456789abcdef';
 
-test('callback relays the code and state from Hypothesis completion page', () => {
+test('callback waits for background confirmation before closing', async () => {
   let observe;
+  let confirm;
+  let stopped = 0;
+  let closed = 0;
   const messages = [];
   const page = {
     textContent: JSON.stringify({
@@ -17,7 +20,10 @@ test('callback relays the code and state from Hypothesis completion page', () =>
       origin: 'moz-extension://upstream',
     }),
   };
-  const window = {};
+  const window = {
+    stop: () => ++stopped,
+    close: () => ++closed,
+  };
   window.top = window;
   vm.runInNewContext(callback, {
     window,
@@ -27,7 +33,9 @@ test('callback relays the code and state from Hypothesis completion page', () =>
       runtime: {
         sendMessage: message => {
           messages.push(message);
-          return Promise.resolve();
+          return new Promise(resolve => {
+            confirm = resolve;
+          });
         },
       },
     },
@@ -42,10 +50,15 @@ test('callback relays the code and state from Hypothesis completion page', () =>
   observe();
   observe();
   assert.equal(messages.length, 1);
+  assert.equal(stopped, 1);
+  assert.equal(closed, 0);
   assert.deepEqual(
     { ...messages[0] },
     { type: 'hypothesis-firefox-oauth-response', code: 'example', state },
   );
+  confirm({ stored: true });
+  await Promise.resolve();
+  assert.equal(closed, 1);
 });
 
 test('bridge forwards session response for the bundled client', () => {

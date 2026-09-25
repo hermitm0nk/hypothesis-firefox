@@ -1,7 +1,7 @@
 // Firefox fallback for the Hypothesis OAuth web_message response. The server's
 // post-auth page closes its popup immediately after posting to window.opener.
-// In an extension sidebar iframe that cross-origin message can be lost.
-// Relay the same code and state through extension messaging before it closes.
+// In a Firefox extension iframe that cross-origin message can be lost, and the
+// popup can unload before an asynchronous extension message completes.
 (() => {
   if (window !== window.top || location.pathname !== '/oauth/authorize') {
     return;
@@ -36,11 +36,21 @@
 
     sent = true;
     observer.disconnect();
+    // The server's module script closes the popup. Stop loading that script
+    // until the background has safely received the authorization code.
+    window.stop();
     chrome.runtime
       .sendMessage({
         type: 'hypothesis-firefox-oauth-response',
         code: response.code,
         state: response.state,
+      })
+      .then(result => {
+        if (result?.stored) {
+          window.close();
+        } else {
+          console.error('Hypothesis OAuth relay was not accepted');
+        }
       })
       .catch(error => console.error('Hypothesis OAuth relay failed', error));
   });
