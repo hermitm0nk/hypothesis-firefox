@@ -14,7 +14,7 @@ test('Nord overrides upstream light borders and tones down labels', async () => 
       <style>
         :root { --color-grey-3: #dbdbdb; --color-grey-9: #202020; }
         * { border-color: var(--color-grey-3); }
-        .card { border: 1px solid; }
+        .card { border-width: 1px; border-style: solid; }
         .label { color: var(--color-grey-9); }
       </style>
       <div class="card" data-testid="card">Annotation</div>
