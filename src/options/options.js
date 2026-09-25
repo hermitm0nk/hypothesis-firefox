@@ -27,9 +27,7 @@ function loadOptions() {
     items => {
       badgeCheckbox().checked = !!items.badge;
       themeSelect().value =
-        typeof items.sidebarTheme === 'string'
-          ? items.sidebarTheme
-          : 'default';
+        typeof items.sidebarTheme === 'string' ? items.sidebarTheme : 'default';
     },
   );
 }
