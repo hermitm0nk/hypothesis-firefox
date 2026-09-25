@@ -42,7 +42,9 @@ function checkStoredResponse() {
   chrome.storage.session
     .get('oauthResponse')
     .then(stored => deliver(stored.oauthResponse))
-    .catch(error => console.error('[Hypothesis OAuth] session read failed', error));
+    .catch(error =>
+      console.error('[Hypothesis OAuth] session read failed', error),
+    );
 }
 
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -85,7 +87,9 @@ window.open = (url, target, features) => {
     if (poll === activePoll) {
       clearInterval(poll);
       poll = undefined;
-      console.error('[Hypothesis OAuth] timed out waiting for sidebar delivery');
+      console.error(
+        '[Hypothesis OAuth] timed out waiting for sidebar delivery',
+      );
     }
   }, 120000);
   return popup;
