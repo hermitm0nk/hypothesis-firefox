@@ -329,6 +329,9 @@ describe('SidebarInjector', () => {
         fakeChromeAPI.runtime.getURL = sinon
           .stub()
           .callsFake(path => `moz-extension://hypothesis${path}`);
+        embedScriptReturnValue = {
+          installedURL: 'moz-extension://hypothesis/client/app.html',
+        };
 
         await injector.injectIntoTab({ id: 1, url: 'https://example.com' });
 
