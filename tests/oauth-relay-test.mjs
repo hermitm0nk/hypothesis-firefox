@@ -61,12 +61,20 @@ test('callback waits for background confirmation before closing', async () => {
   assert.equal(closed, 1);
 });
 
-test('bridge forwards session response for the bundled client', () => {
+test('bridge forwards session changes and polls while login is open', async () => {
   let listener;
+  let tick;
+  let storedResponse;
   const posted = [];
+  const window = {
+    location: { origin: 'moz-extension://our-addon' },
+    open: () => ({}),
+    postMessage: (...args) => posted.push(args),
+  };
   vm.runInNewContext(bridge, {
     chrome: {
       storage: {
+        session: { get: async () => ({ oauthResponse: storedResponse }) },
         onChanged: {
           addListener: fn => {
             listener = fn;
@@ -74,10 +82,14 @@ test('bridge forwards session response for the bundled client', () => {
         },
       },
     },
-    window: {
-      location: { origin: 'moz-extension://our-addon' },
-      postMessage: (...args) => posted.push(args),
+    window,
+    URL,
+    setInterval: fn => {
+      tick = fn;
+      return 1;
     },
+    clearInterval: () => {},
+    setTimeout: () => {},
   });
   const changes = { oauthResponse: { newValue: { code: 'example', state } } };
   listener(changes, 'sync');
@@ -89,5 +101,19 @@ test('bridge forwards session response for the bundled client', () => {
   assert.deepEqual(
     { ...posted[0][0] },
     { type: 'authorization_response', code: 'example', state },
+  );
+
+  const nextState = 'fedcba9876543210';
+  window.open(
+    `https://hypothes.is/oauth/authorize?state=${nextState}`,
+    'Log in to Hypothesis',
+  );
+  storedResponse = { code: 'next-code', state: nextState };
+  tick();
+  await Promise.resolve();
+  assert.equal(posted.length, 2);
+  assert.deepEqual(
+    { ...posted[1][0] },
+    { type: 'authorization_response', code: 'next-code', state: nextState },
   );
 });
