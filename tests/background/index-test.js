@@ -109,12 +109,12 @@ describe('background/index', () => {
     assert.calledWith(fakeChromeAPI.storage.session.set, {
       oauthResponse: { code: 'example', state: '0123456789abcdef' },
     });
+    await Promise.resolve();
     assert.calledWith(fakeChromeAPI.runtime.sendMessage, {
       type: 'hypothesis-firefox-oauth-delivery',
       code: 'example',
       state: '0123456789abcdef',
     });
-    await Promise.resolve();
     assert.calledWith(sendResponse, { stored: true });
   });
 
