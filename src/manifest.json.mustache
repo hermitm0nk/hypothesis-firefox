@@ -1,5 +1,5 @@
 {
-  "name": "Hypothesis Firefox (OAuth test)",
+  "name": "Hypothesis - Web & PDF Annotation",
   "short_name": "Hypothesis",
   "version": "{{ version }}",
   {{#browserIsChrome}}
@@ -18,8 +18,9 @@
   {{#browserIsFirefox}}
   "browser_specific_settings": {
     "gecko": {
-      "id": "hypothesis-firefox-unsigned-test@hermitm0nk.github",
+      "id": "hypothesis-firefox@hermitm0nk.github",
       "strict_min_version": "140.0",
+      "update_url": "https://github.com/hermitm0nk/hypothesis-firefox/releases/latest/download/updates.json",
       "data_collection_permissions": {
         "required": [
           "personallyIdentifyingInfo",

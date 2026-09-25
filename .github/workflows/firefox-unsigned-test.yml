@@ -40,8 +40,10 @@ jobs:
           node --test \
             tests/firefox-build-test.mjs \
             tests/oauth-relay-test.mjs \
-            tests/sidebar-page-theme-test.mjs
-          yarn web-ext lint --source-dir build
+            tests/sidebar-page-theme-test.mjs \
+            tests/sidebar-theme-test.mjs \
+            tests/firefox-update-manifest-test.mjs
+          yarn web-ext lint --source-dir build --self-hosted
       - name: Upload temporary installation XPI
         uses: actions/upload-artifact@v4
         with:

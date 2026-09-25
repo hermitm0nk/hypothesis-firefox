@@ -4,10 +4,10 @@
   color-scheme: dark;
   --theme-surface: #2e3440;
   --theme-raised: #3b4252;
-  --theme-subtle: #434c5e;
-  --theme-border: #434c5e;
-  --theme-muted: #d8dee9;
-  --theme-text: #eceff4;
+  --theme-subtle: #3b4252;
+  --theme-border: #3b4252;
+  --theme-muted: #9ea9ba;
+  --theme-text: #c4ccd8;
   --theme-accent: #88c0d0;
   --theme-accent-strong: #8fbcbb;
   --theme-success: #a3be8c;

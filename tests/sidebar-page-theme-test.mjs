@@ -5,82 +5,81 @@ import { test } from 'node:test';
 
 const source = readFileSync('src/sidebar-page-theme.js', 'utf8');
 
-test(
-  'page toolbar follows the selected theme and stops on sidebar destroy',
-  async () => {
-    const styleValues = new Map();
-    const sidebar = {
-      dataset: {},
-      style: {
-        setProperty(name, value) {
-          styleValues.set(name, value);
-        },
-        removeProperty(name) {
-          styleValues.delete(name);
-        },
+test('page toolbar follows the selected theme and stops on sidebar destroy', async () => {
+  const styleValues = new Map();
+  const sidebar = {
+    dataset: {},
+    style: {
+      setProperty(name, value) {
+        styleValues.set(name, value);
       },
-    };
-    let destroyListener;
-    const sidebarLink = {
-      addEventListener(type, listener) {
-        assert.equal(type, 'destroy');
-        destroyListener = listener;
+      removeProperty(name) {
+        styleValues.delete(name);
       },
-    };
-    let storageChangedListener;
-    let removedStorageListener;
-    let observerDisconnected = false;
+    },
+  };
+  let destroyListener;
+  const sidebarLink = {
+    addEventListener(type, listener) {
+      assert.equal(type, 'destroy');
+      destroyListener = listener;
+    },
+  };
+  let storageChangedListener;
+  let removedStorageListener;
+  let observerDisconnected = false;
 
-    class FakeMutationObserver {
-      observe() {}
-      disconnect() {
-        observerDisconnected = true;
-      }
+  class FakeMutationObserver {
+    observe() {}
+    disconnect() {
+      observerDisconnected = true;
     }
+  }
 
-    const browser = {
-      storage: {
-        onChanged: {
-          addListener(listener) {
-            storageChangedListener = listener;
-          },
-          removeListener(listener) {
-            removedStorageListener = listener;
-          },
+  const browser = {
+    storage: {
+      onChanged: {
+        addListener(listener) {
+          storageChangedListener = listener;
         },
-        sync: {
-          get: async () => ({ sidebarTheme: 'nord' }),
+        removeListener(listener) {
+          removedStorageListener = listener;
         },
       },
-    };
-
-    runInNewContext(source, {
-      MutationObserver: FakeMutationObserver,
-      document: {
-        documentElement: {},
-        querySelector: () => sidebarLink,
-        querySelectorAll: () => [sidebar],
+      sync: {
+        get: async () => ({ sidebarTheme: 'nord' }),
       },
-      globalThis: { browser },
-    });
-    await Promise.resolve();
+    },
+  };
 
-    assert.equal(sidebar.dataset.hypothesisTheme, 'nord');
-    assert.equal(styleValues.get('--color-white'), '#2e3440');
-    assert.equal(styleValues.get('--color-grey-2'), '#3b4252');
-    assert.equal(styleValues.get('--color-grey-3'), '#434c5e');
-    assert.equal(sidebar.style.colorScheme, 'dark');
-    assert.equal(observerDisconnected, true);
+  runInNewContext(source, {
+    MutationObserver: FakeMutationObserver,
+    document: {
+      documentElement: {},
+      querySelector: () => sidebarLink,
+      querySelectorAll: () => [sidebar],
+    },
+    globalThis: { browser },
+  });
+  await Promise.resolve();
 
-    storageChangedListener(
-      { sidebarTheme: { newValue: 'tokyo-night-light' } },
-      'sync',
-    );
-    assert.equal(sidebar.dataset.hypothesisTheme, 'tokyo-night-light');
-    assert.equal(styleValues.get('--color-white'), '#d5d6db');
-    assert.equal(sidebar.style.colorScheme, 'light');
+  assert.equal(sidebar.dataset.hypothesisTheme, 'nord');
+  assert.equal(styleValues.get('--color-white'), '#2e3440');
+  assert.equal(styleValues.get('--color-grey-2'), '#3b4252');
+  assert.equal(styleValues.get('--color-grey-3'), '#3b4252');
+  assert.equal(styleValues.get('--color-grey-8'), '#c4ccd8');
+  assert.equal(styleValues.get('--color-grey-5'), '#9ea9ba');
+  assert.equal(sidebar.style.colorScheme, 'dark');
+  assert.equal(observerDisconnected, true);
 
-    destroyListener();
-    assert.equal(removedStorageListener, storageChangedListener);
-  },
-);
+  storageChangedListener(
+    { sidebarTheme: { newValue: 'tokyo-night-light' } },
+    'sync',
+  );
+  assert.equal(sidebar.dataset.hypothesisTheme, 'tokyo-night-light');
+  assert.equal(styleValues.get('--color-white'), '#d5d6db');
+  assert.equal(sidebar.style.colorScheme, 'light');
+
+  destroyListener();
+  assert.equal(removedStorageListener, storageChangedListener);
+});

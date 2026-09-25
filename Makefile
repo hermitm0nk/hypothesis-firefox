@@ -67,6 +67,7 @@ build/manifest.json: src/manifest.json.mustache build/settings.json
 build/client/build: node_modules/hypothesis/build/manifest.json
 	@mkdir -p $@
 	cp -R node_modules/hypothesis/build/* $@
+	node tools/patch-sidebar-theme-css.js $@/styles/sidebar.css
 	@# Replace boot template with extension-specific URLs.
 	node tools/render-boot-template.js $@/boot-template.js $@/boot.js
 	rm $@/boot-template.js
