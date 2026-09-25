@@ -35,7 +35,7 @@ export async function init() {
       !/^[a-f0-9]{16}$/.test(message.state) ||
       !chromeAPI.storage.session
     ) {
-      return;
+      return false;
     }
 
     const response = { code: message.code, state: message.state };
