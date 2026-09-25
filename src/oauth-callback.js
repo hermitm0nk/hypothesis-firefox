@@ -36,7 +36,7 @@
 
     sent = true;
     observer.disconnect();
-    browser.runtime.sendMessage({
+    chrome.runtime.sendMessage({
       type: 'hypothesis-firefox-oauth-response',
       code: response.code,
       state: response.state,

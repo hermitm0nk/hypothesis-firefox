@@ -23,7 +23,7 @@ test('callback relays the code and state from Hypothesis completion page', () =>
     window,
     location: { pathname: '/oauth/authorize' },
     document: { querySelector: () => page },
-    browser: { runtime: { sendMessage: message => messages.push(message) } },
+    chrome: { runtime: { sendMessage: message => messages.push(message) } },
     MutationObserver: class {
       constructor(callback) {
         observe = callback;
@@ -45,7 +45,7 @@ test('bridge accepts only a response from the add-on on the OAuth page', () => {
   let listener;
   const posted = [];
   vm.runInNewContext(bridge, {
-    browser: {
+    chrome: {
       runtime: {
         id: 'our-addon',
         onMessage: {
